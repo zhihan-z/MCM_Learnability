@@ -45,7 +45,7 @@ class Experiment:
                     res_par[1 - i] = 0
             t_avg += count * (-1) ** (res_par[0] + res_par[1])
         t_avg /= shots
-        return np.log(s_avg / t_avg)
+        return s_avg, t_avg
     
 
     def _noiseless_concat(self, circ, t, s):
@@ -122,4 +122,4 @@ class Experiment:
                     res_par[1 - i] = 0
             t_avg += count * (-1) ** (res_par[0] + res_par[1])
         t_avg /= shots
-        return np.log(s_avg / t_avg)
+        return s_avg, t_avg
