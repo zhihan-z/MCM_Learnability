@@ -4,12 +4,12 @@ import matplotlib.pyplot as plt
 from experiment import Experiment
 
 #np.random.seed(114514) # Do NOT set random seeds!
-experiment = Experiment(0.003)
-shots = 1000000
+experiment = Experiment(0.0018)
 bootstrap = 100
 reGen = True
 
 # Learning the cycle basis.
+shots = 100000
 cycle_basis = [["Z00"], ["X01"], ["X11"], ["Y01"], ["Y11"],
                ["I11", "Z11"], ["Z01", "X00"], ["Z01", "X10"], ["Z01", "Y00"], ["Z01", "Y10"],
                ["Z10", "Z01", "I11"], ["I01", "Z10", "Z01", "I10"]] # \lambda^I_{00} excluded
@@ -55,6 +55,7 @@ plt.savefig('cycle.pdf', bbox_inches='tight')
 # Testing the independence of measurement and state preparation.
 # First check that the two settings has similar error rates.
 print(np.sum(list(experiment.sim.fid_qi.values())) / 16, np.sum(list(experiment.sim.fid_refresh.values())) / 16)
+shots = 1000000
 
 
 def indepTest(m_p):
@@ -126,4 +127,4 @@ for s in rpos:
 for t in rneg:
     rnegs.append((np.random.binomial(shots, (t + 1) / 2, bootstrap) / shots) * 2 - 1)
 print((np.sum(np.log(rpos)) - np.sum(np.log(rneg))) / 16)
-print(np.std(np.sum(np.log(rposs), axis=0) - np.sum(np.log(rnegs), axis=0)))
+print((np.std(np.sum(np.log(rposs), axis=0) - np.sum(np.log(rnegs), axis=0))) / 16)

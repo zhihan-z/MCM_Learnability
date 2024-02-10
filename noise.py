@@ -12,7 +12,7 @@ class Noise:
         self._id_gate = Operator(np.eye(4))
         self._id_gate3 = Operator(np.eye(8))
         self._random_qi(noise_scale)
-        self._random_refresh(noise_scale * 0.47) # To make random qi and random measure-and-prepare have similar error rates.
+        self._random_refresh(noise_scale * 0.9) # To make random qi and random measure-and-prepare have similar error rates.
         self._random_spam(noise_scale * 0.25) # Terminating measurement error rates should be smaller than that of MCM's.
         self.noise_model = NoiseModel()
         self.noise_model.add_basis_gates(['unitary'])
@@ -80,8 +80,8 @@ class Noise:
         
     def noisy_sp(self, circ, p):
         """Noisy state preparation.
-        Though almost any initial state works for our protocol, it would be better for the initial state to big overlap with the ideal operator.
-        Here we assume that we prepare the eigen state of the ideal operator and then apply a special Pauli noise (same as the terminating measurement nosie).
+        Though almost any initial state works for our protocol, it would be better for the initial state to have big overlap with the ideal operator.
+        Here we assume that we prepare the eigenstate of the ideal operator and then apply a special Pauli noise (same as the terminating measurement nosie).
         """
         p = p[::-1]
         for i in range(2):
@@ -123,7 +123,7 @@ class Noise:
         tot_q0 = np.zeros([16, 16], dtype=complex)
         tot_q1 = np.zeros([16, 16], dtype=complex)
         tot_weight = 0.0
-        for _ in range(8):
+        for _ in range(2):
             p01 = np.random.rand() * noise_scale
             p10 = np.random.rand() * noise_scale
             q0 = np.kron(np.array([[1-p01+p10,0,0,1-p01-p10],[0,0,0,0],[0,0,0,0],[1-p01-p10,0,0,1-p01+p10]])/2, np.eye(4))
@@ -136,6 +136,22 @@ class Noise:
             tot_weight += weight
             tot_q0 += np.kron(n00, n01) @ q0 @ np.kron(n10, n11) * weight
             tot_q1 += np.kron(n00, n01) @ q1 @ np.kron(n10, n11) * weight
+        q0 = np.kron(np.array([[1,0,0,1],[0,0,0,0],[0,0,0,0],[1,0,0,1]])/2, np.eye(4))
+        q1 = np.kron(np.array([[1,0,0,-1],[0,0,0,0],[0,0,0,0],[-1,0,0,1]])/2, np.eye(4))
+        e = ['X', 'Y']
+        for i in range(2):
+            rate0 = {}
+            rate0['X' + e[i]] = noise_scale * (4 + np.random.rand())
+            rate0['II'] = 1 - rate0['X' + e[i]]
+            n0 = PTM(pauli_error(list(rate0.items()))).data
+            rate1 = {}
+            rate1['XI'] = noise_scale * 4 * i
+            rate1['II'] = 1 - rate1['XI']
+            n1 = PTM(pauli_error(list(rate1.items()))).data
+            weight = np.random.rand() + 1
+            tot_weight += weight
+            tot_q0 += n0 @ q0 @ n1 * weight
+            tot_q1 += n0 @ q1 @ n1 * weight
         tot_q0 /= tot_weight
         tot_q1 /= tot_weight
         helper_chan = PTM(np.kron(np.eye(4), tot_q0) + np.kron(np.diag([1,1,-1,-1]), tot_q1))

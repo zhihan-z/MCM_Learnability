@@ -10,7 +10,7 @@ class Experiment:
         self.sim = Noise(noise_scale)
 
 
-    def learn_single_fid(self, fid, shots=1000000, m_p=False):
+    def learn_single_fid(self, fid, shots=100000, m_p=False):
         """Learn e+\partial e"""
         sgn, s, t = fid2st(fid)
         s_avg = 0
@@ -74,7 +74,7 @@ class Experiment:
         return
     
 
-    def learn_multiple_fid(self, fids, shots=1000000, m_p=False): # add logic for m_p
+    def learn_multiple_fid(self, fids, shots=100000, m_p=False): # add logic for m_p
         """Learn a path"""
         if m_p:
             mcm = self.sim.noisy_mcm
