@@ -12,7 +12,7 @@ class Noise:
         self._id_gate = Operator(np.eye(4))
         self._id_gate3 = Operator(np.eye(8))
         self._random_qi(noise_scale)
-        self._random_refresh(noise_scale * 0.9) # To make random qi and random measure-and-prepare have similar error rates.
+        self._random_refresh(noise_scale) # To make random qi and random measure-and-prepare have similar error rates.
         self._random_spam(noise_scale * 0.25) # Terminating measurement error rates should be smaller than that of MCM's.
         self.noise_model = NoiseModel()
         self.noise_model.add_basis_gates(['unitary'])
