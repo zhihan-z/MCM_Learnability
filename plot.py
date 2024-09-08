@@ -43,13 +43,18 @@ def fmt_label(cycle):
 
 
 plt.rcParams['text.usetex'] = True
+plt.rcParams['axes.titlesize'] = "xx-large"
+plt.rcParams['axes.labelsize'] = "x-large"
+plt.rcParams['legend.fontsize'] = "large"
 plt.figure(figsize=[10, 4.8])
-plt.errorbar([fmt_label(cycle) for cycle in cycle_basis], learned_mean, boosted_std, fmt='o', markersize=4, capsize=5, label='Learned Values', zorder=1)
-plt.scatter([fmt_label(cycle) for cycle in cycle_basis], true_mean, marker='^', s=16, c='r', label='True Values', zorder=2)
+plt.errorbar([fmt_label(cycle) for cycle in cycle_basis], learned_mean, boosted_std, fmt='o', markersize=4, capsize=5, label='learned values', zorder=1)
+plt.scatter([fmt_label(cycle) for cycle in cycle_basis], true_mean, marker='^', s=16, c='r', label='true values', zorder=2)
 plt.grid(True)
 plt.xticks(rotation=-45, fontsize=10, va='top', ha='left')
 plt.legend()
-plt.title('Average Fidelity')
+plt.xlabel('cycle')
+plt.ylabel('average fidelity')
+plt.title('Learned geometric averages of fidelities in cycles')
 plt.savefig('cycle.pdf', bbox_inches='tight')
 
 # Testing the independence of measurement and state preparation.
@@ -96,37 +101,43 @@ if reGen:
     np.savetxt('indep.txt', (qi_mean, qi_std, qi_true, refresh_mean, refresh_std, refresh_true))
 else:
     qi_mean, qi_std, qi_true, refresh_mean, refresh_std, refresh_true = np.loadtxt('indep.txt')
-f, (ax1, ax2) = plt.subplots(1, 2, sharey=True, figsize=(12.8, 4.8))
-ax1.errorbar(['I', 'X', 'Y', 'Z'], qi_mean, qi_std, fmt='o', markersize=4, capsize=5, label='Learned Values', zorder=1)
-ax1.scatter(['I', 'X', 'Y', 'Z'], qi_true, marker='^', s=16, c='r', label='True Values', zorder=2)
+f, (ax1, ax2) = plt.subplots(1, 2, sharey=True, figsize=(12.8, 4.8), constrained_layout=True)
+ax1.errorbar(['I', 'X', 'Y', 'Z'], qi_mean, qi_std, fmt='o', markersize=4, capsize=5, label='learned values', zorder=1)
+ax1.scatter(['I', 'X', 'Y', 'Z'], qi_true, marker='^', s=16, c='r', label='true values', zorder=2)
 ax1.grid(True)
 ax1.legend()
-ax1.set_title("General Quantum Instrument")
-ax2.errorbar(['I', 'X', 'Y', 'Z'], refresh_mean, refresh_std, fmt='o', markersize=4, capsize=5, label='Learned Values', zorder=1)
-ax2.scatter(['I', 'X', 'Y', 'Z'], refresh_true, marker='^', s=16, c='r', label='True Values', zorder=2)
+ax1.yaxis.set_tick_params(labelsize=15)
+ax1.set_title("General compiled MCM")
+ax1.set_xlabel(r'$Q$')
+ax1.set_ylabel(r'$c^Q_{0,1,0,1}$')
+ax2.errorbar(['I', 'X', 'Y', 'Z'], refresh_mean, refresh_std, fmt='o', markersize=4, capsize=5, label='learned values', zorder=1)
+ax2.scatter(['I', 'X', 'Y', 'Z'], refresh_true, marker='^', s=16, c='r', label='true values', zorder=2)
 ax2.grid(True)
-ax2.yaxis.set_tick_params(labelbottom=True)
+ax2.yaxis.set_tick_params(labelbottom=True, labelsize=15)
 ax2.legend()
-ax2.set_title("Measure and Prepare")
+ax2.set_title("Measure and prepare instrument")
+ax2.set_xlabel(r'$Q$')
+ax2.set_ylabel(r'$c^Q_{0,1,0,1}$')
 plt.savefig('indep.pdf', bbox_inches='tight')
 
 # Learning the error rate p^I_{11}.
-shots = 10000
-print(experiment.sim.rate_qi["I11"]) # True value
-apxval = 0
-for e in ['X11','Y11', 'Y00', 'Z01', 'X00', 'Z00', 'Z01', 'I11', 'Z11']:
-    apxval += np.log(experiment.sim.fid_qi[e])
-for e in ['Y01','X10', 'Z01', 'X01', 'Y10', 'Z01', 'I10', 'I01', 'Z10', 'Z01']:
-    apxval -= np.log(experiment.sim.fid_qi[e])
-print(apxval / 16) # 'True' value under first order approximation
-ress = []
-for _ in range(10):
-    res = 0
-    s, t = experiment.learn_multiple_fid(['X11','Y11', 'Y00', 'Z01', 'X00', 'Z00', 'Z01', 'I11', 'Z11'])
-    res += np.log(s / t)
-    s, t = experiment.learn_multiple_fid(['Y01','X10', 'Z01', 'X01', 'Y10', 'Z01', 'I10', 'I01', 'Z10', 'Z01'])
-    res -= np.log(s / t)
-    res /= 16
-    ress.append(res)
-print(np.average(ress))
-print(np.std(ress) / np.sqrt(10 - 1))
+if reGen:
+    shots = 10000
+    print(experiment.sim.rate_qi["I11"]) # True value
+    apxval = 0
+    for e in ['X11','Y11', 'Y00', 'Z01', 'X00', 'Z00', 'Z01', 'I11', 'Z11']:
+        apxval += np.log(experiment.sim.fid_qi[e])
+    for e in ['Y01','X10', 'Z01', 'X01', 'Y10', 'Z01', 'I10', 'I01', 'Z10', 'Z01']:
+        apxval -= np.log(experiment.sim.fid_qi[e])
+    print(apxval / 16) # 'True' value under first order approximation
+    ress = []
+    for _ in range(10):
+        res = 0
+        s, t = experiment.learn_multiple_fid(['X11','Y11', 'Y00', 'Z01', 'X00', 'Z00', 'Z01', 'I11', 'Z11'])
+        res += np.log(s / t)
+        s, t = experiment.learn_multiple_fid(['Y01','X10', 'Z01', 'X01', 'Y10', 'Z01', 'I10', 'I01', 'Z10', 'Z01'])
+        res -= np.log(s / t)
+        res /= 16
+        ress.append(res)
+    print(np.average(ress))
+    print(np.std(ress) / np.sqrt(10 - 1))
